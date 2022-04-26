@@ -23,8 +23,17 @@ How these slides were created:
 
 ```r
 install.packages("xaringan")
-xaringan::summon_remark() # download deps for offline viewing
+
+# download deps for offline viewing of slides
+xaringan::summon_remark()
+
+# create an html version of the slides
 rmarkdown::render("slides.Rmd")
+
+# push the slides to GitHub pages
+# see `?gh_token_help` for info on creating / registering a PAT
+# TODO: the repo needs to be public for this to work
+usethis::use_github_pages(path = "slides")
 ```
 
 ---
