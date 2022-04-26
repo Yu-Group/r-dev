@@ -1,0 +1,32 @@
+---
+title: "Yu Group software series: R"
+subtitle: "R package dev | simChef + dgpoix | vdocs"
+author: "Tiffany Tang and James Duncan"
+date: "2022/04/27"
+output:
+  xaringan::moon_reader:
+    self_contained: true
+    lib_dir: libs # path to local remark.js library
+    nature:
+      highlightStyle: github
+      countIncrementalSlides: false
+---
+
+# xaringan
+
+The package `xaringan` allows you to create slides using only `Rmarkdown`.
+
+We copied the skeleton Rmarkdown template copied from
+[here](https://bookdown.org/yihui/rmarkdown/xaringan-start.html) and modified.
+
+How these slides were created:
+
+```r
+install.packages("xaringan")
+xaringan::summon_remark() # download deps for offline viewing
+rmarkdown::render("slides.Rmd")
+```
+
+---
+
+Another slide.
