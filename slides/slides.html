@@ -4,9 +4,8 @@
     <title>Yu Group software series: R</title>
     <meta charset="utf-8" />
     <meta name="author" content="Tiffany Tang and James Duncan" />
-    <script src="libs/header-attrs-2.12/header-attrs.js"></script>
-    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
-    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <script src="libs/xaringanExtra_fit-screen-0.2.6/fit-screen.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
   </head>
   <body>
     <textarea id="source">
@@ -14,11 +13,7 @@ class: center, middle, inverse, title-slide
 
 .title[
 # Yu Group software series: R
-]
-.subtitle[
-## R package dev | simChef + dgpoix | vdocs
-]
-.author[
+## R dev | simChef + dgpoix | vdocs
 ### Tiffany Tang and James Duncan
 ]
 .date[
@@ -40,150 +35,218 @@ Resources available at https://github.com/Yu-Group/r-dev
 
 # Why bother with R packages?
 
-- For sharing re-usable code with others
+&lt;style type="text/css"&gt;
+pre {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+pre[class] {
+  max-height: 100px;
+}
+
+.remark-code, .remark-inline-code  { font-family: 'Ubuntu Mono'; }
+a, a &gt; .remark-inline-code { color: rgb(249, 38, 114); }
+.remark-slide-scaler { overflow-y: auto; }
+&lt;/style&gt;
+
+# testthat
+
+Testing is an important part of the data science workflow!
+🖇[`testthat`](https://testthat.r-lib.org/)  makes it simple.
+
 
 ```r
-devtools::install_github("Yu-Group/simChef")
+hitchhiker &lt;- function(x) {
+  return(x + 1)
+}
 
-library(simChef)
-# You can now use functions from simChef!
+testthat::expect_equal(hitchhiker(41), 42)
+testthat::expect_equal(hitchhiker(42), 42)
+
+## Error: hitchhiker(42) not equal to 42.
+## 1/1 mismatches
+## [1] 43 - 42 == 1
 ```
-
---
-
-- For organizing your code
-
-&lt;center&gt;&lt;img src="images/r_pkg_structure.png" width="300"&gt;&lt;/center&gt;
-
---
-
-- Lots of helpful tools that are tied to this package structure (e.g., [`usethis`](https://usethis.r-lib.org/), [`devtools`](https://devtools.r-lib.org/), [`roxygen2`](https://roxygen2.r-lib.org/), [`pkgdown`](https://pkgdown.r-lib.org/))
+Other useful `testthat` verbs:
+* `expect_identical` -- test if objects are the same
+* `expect_true`, `expect_false`
+* `expect_lt`, `expect_gt`
+* `expect_error`, `expect_warning`
+* `expect_snapshot` -- saves stdout and later compares with this gold standard
 
 ---
 
-# Let's get started with a toy R package
+# testthat
+
+📁 `testthat` tests should be in a directory called `tests/testthat/` next to your
+project's `R/` directory. (`usethis::use_testthat` can set that up for you.) 
+
+📄 `testthat` test files should be named like `test-*.R`, e.g. `test-xyz.R`. Again,
+there's a `usethis` function to create this: `usethis::use_test("xyz")`.
+
+👍 create one `test-*.R` file for every `*.R` file in `R/`, e.g.,
+
+Here's an example from `simChef`:
 
 ```r
-# create package
-usethis::create_tidy_package("R.pkg.ex")  
+test_that("fit_experiment works properly with future::multicore", {
 
-# or alternatively, 
-usethis::create_package("R.pkg.ex")
+  # multicore plan isn't supported on windows
+  skip_on_os("windows")
+
+  # fit_experiment_fixture() returns sequential and parallel simulation results
+  results &lt;- fit_experiment_fixture(future::multicore)
+
+  expect_identical(results[[1]], results[[2]])
+})
 ```
-
-This will
-
-- create a new package named `R.pkg.ex`
-- apply as many of the tidyverse conventions as possible, 
-- issue a few reminders
-- activate the new package.
 
 ---
 
-# Let's get started with a toy R package
+# withr
+
+🖇[`withr`](https://withr.r-lib.org/index.html) is another helpful package for
+writing testing code and much more.
+
+* Prevents unintended side effects (aka, hard to squash 🦟!): `with_environment()`
+* Cleans up temporary state: `with_tempfile()`
+* Helps with reproducibility: `with_seed()`
+* Can run arbitrary code when exiting a frame in the call stack: `defer()`, `defer_parent()`
+
+---
+
+# withr in simChef
+
+We use `withr` to temporarily set a `future` plan and reset it when the code
+inside of `with_plan` finishes.
+
 
 ```r
-# create package
-usethis::create_tidy_package("R.pkg.ex")
+set_plan &lt;- function(plan, ...) {
+  # get the original plan so we can reset at the end
+  old_plan &lt;- future::plan()
+  future::plan(plan, ...)
+  return(old_plan)
+}
+
+reset_plan &lt;- function(plan) {
+  future::plan(plan)
+}
+
+with_plan &lt;- withr::with_(set_plan, reset_plan)
+
+fit_experiment_fixture &lt;- function(plan) {
+  ... # setup code
+
+  parallel &lt;- withr::with_seed( # set the random seed
+    seed,
+    with_plan( # set the plan
+      plan,
+      fit_experiment(experiment, n_reps = 10) # get results in parallel
+    )
+  )
+  return(list(parallel, sequential))
+}
 ```
+
+---
+
+# GitHub Actions
+
+ 🖇[GitHub Actions](https://docs.github.com/en/actions): automated scripts that run
+on GitHub's servers when you make changes to a repo.
+
+They help automate:
+
+* testing
+* code "linting" (syntax / style checking)
+* (documentation) website deployment
+* many other repetitive tasks that run when code changes
+
+Here's the `usethis` command: `usethis::use_github_actions("check-standard")`.
+
+---
+
+# Example: Automated grading of STAT 215A lab reports
+
+🖇[auto215a](https://github.com/Yu-Group/auto215a/) (private repo)
+
+
+
+---
+
+# `Yu-Group` Actions
+
+GitHub Action are a key part of the group's project / software development
+workflow, used by:
+
+* `simChef`
+* `vdocs`
+* `vflow`
+* `imodels`
+* Many more projects and hopefully yours too!
+
+---
+
+# r-lib GitHub actions
+
+Many of the core R packages we've mentioned are maintained in the
+🖇[`r-lib`](https://github.com/r-lib) GitHub organization, including:
+* `devtools`
+* `roxygen2`
+* `testthat`
+* `pkgdown`
+* `usethis`
+
+`r-lib` also maintains a very useful repo with many GitHub Actions scripts that
+you can use in your workflows: 🖇[r-lib/actions](https://github.com/r-lib/actions).
+
+---
+
+# xaringan
+
+We created these slides in `Rmarkdown` via the package `r
+emo::ji("paperclips")`[`xaringan`](https://bookdown.org/yihui/rmarkdown/xaringan.html).
+
+# Let's get started with a toy R package
+
+
+```r
+install.packages("xaringan")
+
+# download deps for offline viewing of slides
+xaringan::summon_remark()
+
+# create an html version of the slides
+rmarkdown::render("slides.Rmd")
+
+# push the slides to GitHub pages
+# see `?gh_token_help` for info on creating / registering a PAT
+# TODO: the repo needs to be public for this to work
+usethis::use_github_pages(path = "slides")
+```
+* 🖇[xaringanthemer](https://pkg.garrickadenbuie.com/xaringanthemer)
+* 🖇[xaringanExtra](https://pkg.garrickadenbuie.com/xaringanExtra)
 
 &lt;center&gt;&lt;img src="images/r_tidy_pkg_structure.png" width="300"&gt;&lt;/center&gt;
 
 ---
 
-# Let's get started with a toy R package
+# Additional resources
 
-Put all functions in R/
-
-```r
-remove_constant_columns &lt;- function(X) {
-  const_cols &lt;- purrr::map_lgl(X, ~all(duplicated(.x)[-1L]))
-  X_cleaned &lt;- X %&gt;%
-    dplyr::select(which(!const_cols))
-  return(const_cols)
-}
-```
-
----
-
-# Documentation with `roxygen2`
-
-```r
-#' Remove constant columns in data
-#'
-#' @description Given some data X, removes all columns in the data that are a
-#'   constant value (while ignoring NAs).
-#'
-#' @param X A data frame.
-#'
-#' @return A data frame where constant columns have been removed.
-#'
-#' @examples
-#' X &lt;- data.frame(a = c(1, 1, 1), b = c(1, 2, 3))
-#' X_cleaned &lt;- remove_constant_columns(X)
-#' 
-#' @export
-remove_constant_columns &lt;- function(X) {
-  const_cols &lt;- purrr::map_lgl(X, ~all(duplicated(.x)[-1L]))
-  X_cleaned &lt;- X %&gt;%
-    dplyr::select(which(!const_cols))
-  return(const_cols)
-}
-```
-
-```r
-roxygen2::roxygenise()  # or alternatively, `devtools::document()`
-```
-
----
-
-# Managing dependencies
-
-```r
-usethis::use_package("purrr")
-usethis::use_package("dplyr")
-usethis::use_pipe()
-```
-
----
-
-# Creating vignettes
-
-```r
-usethis::use_vignette("example_vignette")
-```
-
----
-
-# Creating a website
-
-```r
-devtools::build_readme()
-pkgdown::build_site()
-```
-
----
-
-# Checking the R package build
-
-```r
-devtools::check()
-```
-
----
-
-# Other useful commands
-
-```r
-devtools::load_all()
-```
-
+* 🖇["Advanced R" (2nd edition)](https://adv-r.hadley.nz)
+* 🖇["R Packages" (2nd edition)](https://r-pkgs.org/)
+* 🖇["bookdown: Authoring Books and Technical Documents with R Markdown"](https://bookdown.org/yihui/bookdown/)
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
 <script>var slideshow = remark.create({
-"highlightStyle": "github",
-"countIncrementalSlides": false
+"highlightStyle": "googlecode",
+"countIncrementalSlides": false,
+"navigation": {
+"scroll": false
+}
 });
 if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
   window.dispatchEvent(new Event('resize'));

@@ -1,19 +1,45 @@
 ---
 title: "Yu Group software series: R"
-subtitle: "R package dev | simChef + dgpoix | vdocs"
+subtitle: "R dev | simChef + dgpoix | vdocs"
 author: "Tiffany Tang and James Duncan"
 date: "2022/04/27"
 output:
   xaringan::moon_reader:
-    css: [default, metropolis, metropolis-fonts, "css/my-style.css"]
-    # css: ["libs/remark-css-0.0.1/default.css", "libs/remark-css-0.0.1/default-fonts.css", "css/my-style.css"]
     self_contained: true
     lib_dir: libs # path to local remark.js library
+    css: [xaringan-themer.css, "css/my-style.css"]
     nature:
-      highlightStyle: github
+      highlightStyle: googlecode # solarized-dark
       highlightSpans: true
       countIncrementalSlides: false
+      navigation:
+        scroll: false
 ---
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+xaringanthemer::style_mono_accent(
+  base_color = "#00b0da",
+  header_font_google = xaringanthemer::google_font("Josefin Sans"),
+  text_font_google   = xaringanthemer::google_font("Montserrat", "300", "300i"),
+  code_font_google   = xaringanthemer::google_font("Fira Mono")
+)
+xaringanExtra::use_fit_screen()
+```
+
+```{css, echo=FALSE}
+pre {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+pre[class] {
+  max-height: 100px;
+}
+
+.remark-code, .remark-inline-code  { font-family: 'Ubuntu Mono'; }
+a, a > .remark-inline-code { color: rgb(249, 38, 114); }
+.remark-slide-scaler { overflow-y: auto; }
+```
 
 # Roadmap
 
@@ -244,16 +270,198 @@ usethis::use_tidy_style()
 
 ---
 
+# testthat
+
+Testing is an important part of the data science workflow!
+`r emo::ji("paperclips")`[`testthat`](https://testthat.r-lib.org/)  makes it simple.
+
+```{r, eval=FALSE}
+hitchhiker <- function(x) {
+  return(x + 1)
+}
+
+testthat::expect_equal(hitchhiker(41), 42)
+testthat::expect_equal(hitchhiker(42), 42)
+
+## Error: hitchhiker(42) not equal to 42.
+## 1/1 mismatches
+## [1] 43 - 42 == 1
+```
+Other useful `testthat` verbs:
+* `expect_identical` -- test if objects are the same
+* `expect_true`, `expect_false`
+* `expect_lt`, `expect_gt`
+* `expect_error`, `expect_warning`
+* `expect_snapshot` -- saves stdout and later compares with this gold standard
+
+---
+
+# testthat
+
+`r emo::ji("file_folder")` `testthat` tests should be in a directory called `tests/testthat/` next to your
+project's `R/` directory. (`usethis::use_testthat` can set that up for you.) 
+
+`r emo::ji("page_facing_up")` `testthat` test files should be named like `test-*.R`, e.g. `test-xyz.R`. Again,
+there's a `usethis` function to create this: `usethis::use_test("xyz")`.
+
+`r emo::ji("+1")` create one `test-*.R` file for every `*.R` file in `R/`, e.g.,
+
+Here's an example from `simChef`:
+```{r, eval=FALSE}
+test_that("fit_experiment works properly with future::multicore", {
+
+  # multicore plan isn't supported on windows
+  skip_on_os("windows")
+
+  # fit_experiment_fixture() returns sequential and parallel simulation results
+  results <- fit_experiment_fixture(future::multicore)
+
+  expect_identical(results[[1]], results[[2]])
+})
+```
+
+---
+
+# withr
+
+`r emo::ji("paperclips")`[`withr`](https://withr.r-lib.org/index.html) is another helpful package for
+writing testing code and much more.
+
+* Prevents unintended side effects (aka, hard to squash `r emo::ji("mosquito")`!): `with_environment()`
+* Cleans up temporary state: `with_tempfile()`
+* Helps with reproducibility: `with_seed()`
+* Can run arbitrary code when exiting a frame in the call stack: `defer()`, `defer_parent()`
+
+---
+
+# withr in simChef
+
+We use `withr` to temporarily set a `future` plan and reset it when the code
+inside of `with_plan` finishes.
+
+```{r, eval=FALSE}
+set_plan <- function(plan, ...) {
+  # get the original plan so we can reset at the end
+  old_plan <- future::plan()
+  future::plan(plan, ...)
+  return(old_plan)
+}
+
+reset_plan <- function(plan) {
+  future::plan(plan)
+}
+
+with_plan <- withr::with_(set_plan, reset_plan)
+
+fit_experiment_fixture <- function(plan) {
+  ... # setup code
+
+  parallel <- withr::with_seed( # set the random seed
+    seed,
+    with_plan( # set the plan
+      plan,
+      fit_experiment(experiment, n_reps = 10) # get results in parallel
+    )
+  )
+  return(list(parallel, sequential))
+}
+```
+
+---
+
+# GitHub Actions
+
+ `r emo::ji("paperclips")`[GitHub Actions](https://docs.github.com/en/actions): automated scripts that run
+on GitHub's servers when you make changes to a repo.
+
+They help automate:
+
+* testing
+* code "linting" (syntax / style checking)
+* (documentation) website deployment
+* many other repetitive tasks that run when code changes
+
+Here's the `usethis` command: `usethis::use_github_actions("check-standard")`.
+
+---
+
+# Example: Automated grading of STAT 215A lab reports
+
+`r emo::ji("paperclips")`[auto215a](https://github.com/Yu-Group/auto215a/) (private repo)
+
+
+
+---
+
+# `Yu-Group` Actions
+
+GitHub Action are a key part of the group's project / software development
+workflow, used by:
+
+* `simChef`
+* `vdocs`
+* `vflow`
+* `imodels`
+* Many more projects and hopefully yours too!
+
+---
+
+# r-lib GitHub actions
+
+Many of the core R packages we've mentioned are maintained in the
+`r emo::ji("paperclips")`[`r-lib`](https://github.com/r-lib) GitHub organization, including:
+* `devtools`
+* `roxygen2`
+* `testthat`
+* `pkgdown`
+* `usethis`
+
+`r-lib` also maintains a very useful repo with many GitHub Actions scripts that
+you can use in your workflows: `r emo::ji("paperclips")`[r-lib/actions](https://github.com/r-lib/actions).
+
+---
+
+# xaringan
+
+We created these slides in `Rmarkdown` via the package `r
+emo::ji("paperclips")`[`xaringan`](https://bookdown.org/yihui/rmarkdown/xaringan.html).
+
+How these slides were created:
+
+```{r, eval=FALSE}
+install.packages("xaringan")
+
+# download deps for offline viewing of slides
+xaringan::summon_remark()
+
+# create an html version of the slides
+rmarkdown::render("slides.Rmd")
+
+# push the slides to GitHub pages
+# see `?gh_token_help` for info on creating / registering a PAT
+# TODO: the repo needs to be public for this to work
+usethis::use_github_pages(path = "slides")
+```
+* `r emo::ji("paperclips")`[xaringanthemer](https://pkg.garrickadenbuie.com/xaringanthemer)
+* `r emo::ji("paperclips")`[xaringanExtra](https://pkg.garrickadenbuie.com/xaringanExtra)
+
+---
+
+# Additional resources
+
+* `r emo::ji("paperclips")`["Advanced R" (2nd edition)](https://adv-r.hadley.nz)
+* `r emo::ji("paperclips")`["R Packages" (2nd edition)](https://r-pkgs.org/)
+* `r emo::ji("paperclips")`["bookdown: Authoring Books and Technical Documents with R Markdown"](https://bookdown.org/yihui/bookdown/)
+
+---
+
 class: no-padding
 
 <iframe src="rmd/linear_regression_output.html" width=100% height=100%></iframe>
-
 
 ---
 
 class: no-padding
 
 <iframe src="rmd/TCGA-BRCA-Example.html" width=100% height=100%></iframe>
-
-
 
