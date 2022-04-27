@@ -6,3 +6,31 @@
 .remark-inline-code {
 	background: transparent;
 }
+
+pre {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+pre[class] {
+  max-height: 100px;
+}
+
+/*.remark-code, .remark-inline-code  { font-family: 'Roboto Mono'; }*/
+/*a, a > .remark-inline-code { color: rgb(249, 38, 114); }*/
+
+.remark-slide-scaler { overflow-y: auto; }
+
+ul { list-style-type: circle; }
+
+/*.xaringan-extra-logo.simChef {
+    width: 110px;
+    height: 128px;
+    z-index: 0;
+    background-image: url(images/simChef.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 1em;
+    right: 1em;
+}*/

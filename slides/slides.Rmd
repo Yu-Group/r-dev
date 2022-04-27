@@ -21,8 +21,8 @@ output:
 xaringanthemer::style_mono_accent(
   base_color = "#00b0da",
   header_font_google = xaringanthemer::google_font("Josefin Sans"),
-  text_font_google   = xaringanthemer::google_font("Montserrat", "300", "300i"),
-  code_font_google   = xaringanthemer::google_font("Fira Mono")
+  text_font_google = xaringanthemer::google_font("Montserrat", "300", "300i"),
+  code_font_google = xaringanthemer::google_font("Fira Mono")
 )
 ```
 
@@ -37,49 +37,19 @@ xaringanExtra::use_progress_bar(color = "#0051BA", location = "top")
 # xaringanExtra::use_logo("images/simChef.png", link_url="https://github.com/Yu-Group/simChef")
 ```
 
-```{css, echo=FALSE}
-pre {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-pre[class] {
-  max-height: 100px;
-}
-
-.remark-code, .remark-inline-code  { font-family: 'Ubuntu Mono'; }
-a, a > .remark-inline-code { color: rgb(249, 38, 114); }
-
-.remark-slide-scaler { overflow-y: auto; }
-
-ul { list-style-type: circle; }
-
-.xaringan-extra-logo.simChef {
-    width: 110px;
-    height: 128px;
-    z-index: 0;
-    background-image: url(images/simChef.png);
-    background-size: contain;
-    background-repeat: no-repeat;
-    position: absolute;
-    top: 1em;
-    right: 1em;
-}
-```
-
 # Roadmap
 
-### 1. <span style="color:#4285f4">R package development</span>
+### 1. R package development
 - *Walkthrough*: creating a toy R package
 - Useful tools: documentation, unit testing, GitHub actions
 
-### 2. <span style="color:#4285f4">`simChef`</span> for cooking up simulations in R
+### 2. `simChef` for cooking up simulations in R
 
-<img src="images/simchef_people.png" width="40%" style="margin-left:40px">
+<img src="images/simchef_people.png" width="40%" style="margin-left:40px; margin-top: -20px; margin-bottom: -20px;">
 
-### 3. <span style="color:#4285f4">`vdocs`</span> (short for veridical docs)
+### 3. `vdocs` (short for veridical docs)
 
-<img src="images/vdocs_people.png" width="31%" style="margin-left:40px">
+<img src="images/vdocs_people.png" width="31%" style="margin-left:40px; margin-top: -20px; margin-bottom: -10px;">
 
 *Resources available at: https://github.com/Yu-Group/r-dev 
 
@@ -117,16 +87,14 @@ usethis::create_tidy_package("R.pkg.ex")
 
 --
 
-<br>
-
 This will
 
 - create a new package named `R.pkg.ex`
-- apply as many of the tidyverse conventions as possible, 
+- apply as many of the tidyverse conventions as possible
 - issue a few reminders
 - activate the new package.
 
-<img src="images/r_tidy_pkg_structure.png" width="200" style="position: absolute; right: 40px; top: 250px">
+<img src="images/r_tidy_pkg_structure.png" width="200" style="position: absolute; right: 40px; top: 275px">
 
 --
 
@@ -187,6 +155,8 @@ remove_constant_columns <- function(X) {
 }
 ```
 
+--
+
 We can then render the documentation easily via:
 
 ```r
@@ -201,7 +171,7 @@ After this, we can see the function documentation via the usual:
 ? remove_constant_columns
 ```
 
-<center><img src="images/documentation.png" width="300"></center>
+<center><img src="images/documentation.png" width="500"></center>
 
 ---
 
@@ -917,11 +887,38 @@ class: no-padding
 
 # vdocs (veridical docs)
 
-### For beautiful and easy documentation of PCS analyses
+`vdocs` is an R package to easily create beautiful documentation of data analyses, guided by the PCS framework.
 
-* Originally motivated by our collaboration with MD Anderson
-* There's a need for an interactive guide to walk practitioners through the data science life cycle with a PCS lens.
-* **Our aim**: create an interactive *PCS lab notebook*, analogous to a scientific lab notebook
+```{css, echo=FALSE}
+.faces2 > img {
+    width: 50%;
+    <!-- padding-top: 10%; -->
+}
+```
+
+```{r, eval=FALSE}
+devtools::install_github("Yu-Group/vdocs")
+```
+
+.center.faces2[![collaborators on vdocs](images/vdocs_people.png)]
+
+Motivated by our collaboration with MD Anderson (Ehsan Irajizad, Johannes Fahrmann, Sam Hanash) 
+
+Need for an **interactive guide** to walk practitioners through the data science life cycle with a PCS lens
+
+**Our aim**: create an interactive *PCS lab notebook*, analogous to a scientific lab notebook
+
+---
+
+# PCS Lab Notebook
+
+![](https://yu-group.github.io/vdocs/articles/figures/create_new_nb.png)
+
+---
+
+# PCS Lab Notebook
+
+![](https://yu-group.github.io/vdocs/articles/figures/insert_text_responses.png)
 
 ---
 
@@ -934,16 +931,16 @@ class: no-padding
 # Try it for yourself!
 
 <div style="width: 50%; float: left; text-align: center">
-<h3 style="text-align: center; margin-top: 30px; padding-bottom: 10px;">simChef</h3>
-for realistic, reliable, reproducible, and responsible simulations
+<h3 style="text-align: center; margin-top: 30px; margin-bottom: 10px;">simChef</h3>
+for realistic, reliable, reproducible,<br>and responsible simulations
 <br>
 <a href="https://github.com/Yu-Group/simChef">https://github.com/Yu-Group/simChef</a>
 </div>
 
 <div style="margin-left:50%; text-align: center">
 
-<h3 style="text-align: center; padding-top: 30px; padding-bottom: 10px;">vdocs</h3>
-for beautiful and easy documentation of <br>PCS analyses
+<h3 style="text-align: center; padding-top: 30px; margin-bottom: 10px;">vdocs</h3>
+for beautiful and easy<br>documentation of PCS analyses
 <br>
 <a href="https://github.com/Yu-Group/vdocs">https://github.com/Yu-Group/vdocs</a>
 </div>
