@@ -45,15 +45,17 @@ a, a > .remark-inline-code { color: rgb(249, 38, 114); }
 
 ### 1. <span style="color:#4285f4">R package development</span>
 - *Walkthrough*: creating a toy R package
-- Code documentation and package website
-- Unit testing
-- Integration with GitHub Actions
+- Useful tools: documentation, unit testing, GitHub actions
 
 ### 2. <span style="color:#4285f4">`simChef`</span> for cooking up simulations in R
+
+<img src="images/simchef_people.png" width="40%" style="margin-left:40px">
+
 ### 3. <span style="color:#4285f4">`vdocs`</span> (short for veridical docs)
 
-<br>
-### Resources available at: https://github.com/Yu-Group/r-dev 
+<img src="images/vdocs_people.png" width="31%" style="margin-left:40px">
+
+*Resources available at: https://github.com/Yu-Group/r-dev 
 
 ---
 
@@ -162,7 +164,7 @@ remove_constant_columns <- function(X) {
 We can then render the documentation easily via:
 
 ```r
-devtools::document()  # or equivalently, `roxygen2::roxygenise()`
+devtools::document()  # or equivalently, roxygen2::roxygenise()
 ```
 
 --
@@ -455,9 +457,33 @@ usethis::use_github_pages(path = "slides")
 
 ---
 
+# Automated R Markdown Documentation
+
+**Rapid** and **convenient** reporting of *results*
+
+**Transparent** and **organized** communication of the *simulation design + code*
+
+All in one line of code:
+
+```r
+create_rmd(experiment)
+```
+
+---
+
 class: no-padding
 
 <iframe src="rmd/linear_regression_output.html" width=100% height=100%></iframe>
+
+---
+
+# vdocs (veridical docs)
+
+### For beautiful and easy documentation of PCS analyses
+
+* Originally motivated by our collaboration with MD Anderson
+* There's a need for an interactive guide to walk practitioners through the data science life cycle with a PCS lens.
+* **Our aim**: create an interactive *PCS lab notebook*, analogous to a scientific lab notebook
 
 ---
 
@@ -465,3 +491,31 @@ class: no-padding
 
 <iframe src="rmd/TCGA-BRCA-Example.html" width=100% height=100%></iframe>
 
+---
+
+# Try it for yourself!
+
+<div style="width: 50%; float: left; text-align: center">
+<h3 style="text-align: center; margin-top: 30px; padding-bottom: 10px;">simChef</h3>
+for realistic, reliable, reproducible, and responsible simulations
+<br>
+<a href="https://github.com/Yu-Group/simChef">https://github.com/Yu-Group/simChef</a>
+</div>
+
+<div style="margin-left:50%; text-align: center">
+
+<h3 style="text-align: center; padding-top: 30px; padding-bottom: 10px;">vdocs</h3>
+for beautiful and easy documentation of <br>PCS analyses
+<br>
+<a href="https://github.com/Yu-Group/vdocs">https://github.com/Yu-Group/vdocs</a>
+</div>
+
+<br>
+
+*For development of your own Rmd-generated html documents, check out: https://github.com/Yu-Group/vthemes 
+
+<br>
+
+<h2 style="text-align: center;">Let us know what you think!</h2>
+
+---
