@@ -12,16 +12,148 @@ output:
       countIncrementalSlides: false
 ---
 
+# testthat
+
+Testing is an important part of the data science workflow!
+
+[`testthat`](https://testthat.r-lib.org/) makes it simple.
+
+```{r, error=TRUE}
+hitchhiker <- function(x) {
+  return(x + 1)
+}
+
+library(testthat)
+# order of args is (actual, expected)
+expect_equal(hitchhiker(41), 42)
+expect_equal(hitchhiker(42), 42)
+```
+
+Other useful `testthat` verbs:
+
+* `expect_identical` -- test if objects are the same
+* `expect_true`, `expect_false`
+* `expect_lt`, `expect_gt`
+* `expect_error`, `expect_warning`
+* `expect_snapshot` -- saves printed outputs and compares later with this gold standard
+
+---
+
+# testthat
+
+`testthat` tests should be in a directory called `tests/testthat/` next to your
+project's `R/` directory. (`usethis::use_testthat` can set that up for you.) 
+
+`testthat` test files should be named like `test-*.R`, e.g. `test-xyz.R`.
+
+`r emo::ji("+1")`: create one `test-*.R` file for every `*.R` file in `R/`, e.g.,
+
+Here's an example from `simChef`:
+```{r, eval=FALSE}
+test_that("fit_experiment works properly with future::multicore", {
+  # multicore plan isn't supported on windows
+  skip_on_os("windows")
+  # fit_experiment_fixture() returns sequential and parallel simulation results
+  results <- fit_experiment_fixture(future::multicore)
+  expect_identical(results[[1]], results[[2]])
+})
+```
+
+---
+
+# withr
+
+Another helpful package for writing testing code and much more.
+
+* Prevents unintended side effects (aka, hard to squash `r emo::ji("mosquito")`!): `with_environment()`
+* Cleans up temporary state: `with_tempfile()`
+* Helps with reproducibility: `with_seed()`
+* Can run arbitrary code when exiting a frame in the call stack: `defer()`, `defer_parent()`
+
+---
+
+# withr in simChef
+
+We use `withr` to temporarily set a `future` plan and reset it when the code
+inside of `with_plan` finishes.
+
+```{r, eval=FALSE}
+set_plan <- function(plan, ...) {
+  # get the original plan so we can reset at the end
+  old_plan <- future::plan()
+  future::plan(plan, ...)
+  return(old_plan)
+}
+
+reset_plan <- function(plan) {
+  future::plan(plan)
+}
+
+with_plan <- withr::with_(set_plan, reset_plan)
+
+fit_experiment_fixture <- function(plan) {
+  ... # setup code
+
+  parallel <- withr::with_seed( # set the random seed
+    seed,
+    with_plan( # set the plan
+      plan,
+      fit_experiment(experiment, n_reps = 10) # get results in parallel
+    )
+  )
+  return(list(parallel, sequential))
+}
+```
+
+---
+
+# GitHub Actions
+
+[GitHub Actions](https://docs.github.com/en/actions): automated scripts that run
+on GitHub's servers when you make changes to a repo.
+
+They help automate:
+
+* testing
+* code "linting" (syntax / style checking)
+* (documentation) website deployment
+* many other repetitive tasks that run when code changes
+
+---
+
+# Automated grading for STAT 215A lab reports
+
+[auto215a](https://github.com/Yu-Group/auto215a/) (private repo)
+
+
+
+---
+
+# GitHub Actions
+
+GitHub Action are a key part of the group's project / software development
+workflow, used by:
+
+* `simChef`
+* `vdocs`
+* `vflow`
+* `imodels`
+* Many more projects and hopefully yours too!
+
+---
+
+---
+
 # xaringan
 
-The package `xaringan` allows you to create slides using only `Rmarkdown`.
+We created these slides in `Rmarkdown` via the package `xaringan`.
 
 We copied the skeleton Rmarkdown template copied from
 [here](https://bookdown.org/yihui/rmarkdown/xaringan-start.html) and modified.
 
 How these slides were created:
 
-```r
+```{r, eval=FALSE}
 install.packages("xaringan")
 
 # download deps for offline viewing of slides
@@ -38,4 +170,7 @@ usethis::use_github_pages(path = "slides")
 
 ---
 
-Another slide.
+# Additional resources
+
+* ["Advanced R" (2nd edition)](https://adv-r.hadley.nz)
+* ["R Packages" (2nd edition)](https://r-pkgs.org/)
