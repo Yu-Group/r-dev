@@ -5,20 +5,29 @@ author: "Tiffany Tang and James Duncan"
 date: "2022/04/27"
 output:
   xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts, "css/my-style.css"]
+    # css: ["libs/remark-css-0.0.1/default.css", "libs/remark-css-0.0.1/default-fonts.css", "css/my-style.css"]
     self_contained: true
     lib_dir: libs # path to local remark.js library
     nature:
       highlightStyle: github
+      highlightSpans: true
       countIncrementalSlides: false
 ---
 
 # Roadmap
 
-### 1. R Package Development
-### 2. `simChef`
-### 3. `vdocs`
+### 1. <span style="color:#4285f4">R package development</span>
+- *Walkthrough*: creating a toy R package
+- Code documentation and package website
+- Unit testing
+- Integration with GitHub Actions
 
-Resources available at https://github.com/Yu-Group/r-dev 
+### 2. <span style="color:#4285f4">`simChef`</span> for cooking up simulations in R
+### 3. <span style="color:#4285f4">`vdocs`</span> (short for veridical docs)
+
+<br>
+### Resources available at: https://github.com/Yu-Group/r-dev 
 
 ---
 
@@ -48,12 +57,13 @@ library(simChef)
 # Let's get started with a toy R package
 
 ```r
-# create package
+# create package with tidyverse conventions implemented
 usethis::create_tidy_package("R.pkg.ex")  
-
-# or alternatively, 
-usethis::create_package("R.pkg.ex")
 ```
+
+--
+
+<br>
 
 This will
 
@@ -62,24 +72,28 @@ This will
 - issue a few reminders
 - activate the new package.
 
----
+<img src="images/r_tidy_pkg_structure.png" width="200" style="position: absolute; right: 40px; top: 250px">
 
-# Let's get started with a toy R package
+--
+
+<br><br>
 
 ```r
-# create package
-usethis::create_tidy_package("R.pkg.ex")
+# or alternatively, a more barebones start
+usethis::create_package("R.pkg.ex")
 ```
 
-<center><img src="images/r_tidy_pkg_structure.png" width="300"></center>
-
 ---
 
-# Let's get started with a toy R package
+# Writing a reusable R function
 
-Put all functions in R/
+All R functions belong in the `R/` directory.
 
-```r
+Let's create a file called `R/example_function.R` and add the following to the file:
+
+--
+
+```{r}
 remove_constant_columns <- function(X) {
   const_cols <- purrr::map_lgl(X, ~all(duplicated(.x)[-1L]))
   X_cleaned <- X %>%
@@ -87,6 +101,10 @@ remove_constant_columns <- function(X) {
   return(const_cols)
 }
 ```
+
+--
+
+What does this function do?
 
 ---
 
@@ -115,13 +133,40 @@ remove_constant_columns <- function(X) {
 }
 ```
 
+We can then render the documentation easily via:
+
 ```r
-roxygen2::roxygenise()  # or alternatively, `devtools::document()`
+devtools::document()  # or equivalently, `roxygen2::roxygenise()`
 ```
+
+--
+
+After this, we can see the function documentation via the usual:
+
+```r
+? remove_constant_columns
+```
+
+<center><img src="images/documentation.png" width="300"></center>
 
 ---
 
 # Managing dependencies
+
+Note however that `remove_constant_columns` depends on other packages.
+
+```{r, eval = FALSE}
+remove_constant_columns <- function(X) {
+  const_cols <- `purrr`::map_lgl(X, ~all(duplicated(.x)[-1L]))
+  X_cleaned <- X `%>%`
+    `dplyr`::select(which(!const_cols))
+  return(const_cols)
+}
+```
+
+--
+
+The `usethis` package makes it easy to manage these dependencies:
 
 ```r
 usethis::use_package("purrr")
@@ -131,34 +176,84 @@ usethis::use_pipe()
 
 ---
 
-# Creating vignettes
+# Additional documentation
+
+### Readme
+
+This is the first thing that people will see on GitHub (and package website).
+
+The `README.Rmd` file has already been initialized by `usethis::create_tidy_package()`. We next need to render the README.Rmd into a README.md via:
+
+```r
+devtools::build_readme()
+```
+
+--
+
+### Creating vignettes
+
+Vignettes are a great way to teach others how to use your code/package.
+
+To begin creating a vignette, `usethis` provides a nice starter template:
 
 ```r
 usethis::use_vignette("example_vignette")
 ```
 
+This initializes a vignette found at `vignettes/example_vignette.Rmd`
+
 ---
 
 # Creating a website
 
+So far, we have created an R package with a toy R function, some documentation, and a vignette.
+
+An easy way to organize all this documentation and to improve accessibility is through a package website.
+
 ```r
-devtools::build_readme()
 pkgdown::build_site()
 ```
 
----
-
-# Checking the R package build
-
-```r
-devtools::check()
-```
+<iframe src="docs/index.html" width=100% height=60%></iframe>
 
 ---
 
 # Other useful commands
 
+To check whether or not the package can be built successfully:
+
+```r
+devtools::check()
+```
+
+[Note that `devtools::check()` rebuilds all the accompanying documentation, runs all unit tests, and goes through CRAN checks.]
+
+<br>
+To quickly load in the package under development and its most recent changes:
+
 ```r
 devtools::load_all()
 ```
+
+<br>
+To automatically style source code according to the tidyverse style guide:
+
+```r
+usethis::use_tidy_style()
+```
+
+---
+
+class: no-padding
+
+<iframe src="rmd/linear_regression_output.html" width=100% height=100%></iframe>
+
+
+---
+
+class: no-padding
+
+<iframe src="rmd/TCGA-BRCA-Example.html" width=100% height=100%></iframe>
+
+
 
