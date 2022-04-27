@@ -12,30 +12,153 @@ output:
       countIncrementalSlides: false
 ---
 
-# xaringan
+# Roadmap
 
-The package `xaringan` allows you to create slides using only `Rmarkdown`.
+### 1. R Package Development
+### 2. `simChef`
+### 3. `vdocs`
 
-We copied the skeleton Rmarkdown template copied from
-[here](https://bookdown.org/yihui/rmarkdown/xaringan-start.html) and modified.
+Resources available at https://github.com/Yu-Group/r-dev 
 
-How these slides were created:
+---
+
+# Why bother with R packages?
+
+- For sharing re-usable code with others
 
 ```r
-install.packages("xaringan")
+devtools::install_github("Yu-Group/simChef")
 
-# download deps for offline viewing of slides
-xaringan::summon_remark()
+library(simChef)
+# You can now use functions from simChef!
+```
 
-# create an html version of the slides
-rmarkdown::render("slides.Rmd")
+--
 
-# push the slides to GitHub pages
-# see `?gh_token_help` for info on creating / registering a PAT
-# TODO: the repo needs to be public for this to work
-usethis::use_github_pages(path = "slides")
+- For organizing your code
+
+<center><img src="images/r_pkg_structure.png" width="300"></center>
+
+--
+
+- Lots of helpful tools that are tied to this package structure (e.g., [`usethis`](https://usethis.r-lib.org/), [`devtools`](https://devtools.r-lib.org/), [`roxygen2`](https://roxygen2.r-lib.org/), [`pkgdown`](https://pkgdown.r-lib.org/))
+
+---
+
+# Let's get started with a toy R package
+
+```r
+# create package
+usethis::create_tidy_package("R.pkg.ex")  
+
+# or alternatively, 
+usethis::create_package("R.pkg.ex")
+```
+
+This will
+
+- create a new package named `R.pkg.ex`
+- apply as many of the tidyverse conventions as possible, 
+- issue a few reminders
+- activate the new package.
+
+---
+
+# Let's get started with a toy R package
+
+```r
+# create package
+usethis::create_tidy_package("R.pkg.ex")
+```
+
+<center><img src="images/r_tidy_pkg_structure.png" width="300"></center>
+
+---
+
+# Let's get started with a toy R package
+
+Put all functions in R/
+
+```r
+remove_constant_columns <- function(X) {
+  const_cols <- purrr::map_lgl(X, ~all(duplicated(.x)[-1L]))
+  X_cleaned <- X %>%
+    dplyr::select(which(!const_cols))
+  return(const_cols)
+}
 ```
 
 ---
 
-Another slide.
+# Documentation with `roxygen2`
+
+```r
+#' Remove constant columns in data
+#'
+#' @description Given some data X, removes all columns in the data that are a
+#'   constant value (while ignoring NAs).
+#'
+#' @param X A data frame.
+#'
+#' @return A data frame where constant columns have been removed.
+#'
+#' @examples
+#' X <- data.frame(a = c(1, 1, 1), b = c(1, 2, 3))
+#' X_cleaned <- remove_constant_columns(X)
+#' 
+#' @export
+remove_constant_columns <- function(X) {
+  const_cols <- purrr::map_lgl(X, ~all(duplicated(.x)[-1L]))
+  X_cleaned <- X %>%
+    dplyr::select(which(!const_cols))
+  return(const_cols)
+}
+```
+
+```r
+roxygen2::roxygenise()  # or alternatively, `devtools::document()`
+```
+
+---
+
+# Managing dependencies
+
+```r
+usethis::use_package("purrr")
+usethis::use_package("dplyr")
+usethis::use_pipe()
+```
+
+---
+
+# Creating vignettes
+
+```r
+usethis::use_vignette("example_vignette")
+```
+
+---
+
+# Creating a website
+
+```r
+devtools::build_readme()
+pkgdown::build_site()
+```
+
+---
+
+# Checking the R package build
+
+```r
+devtools::check()
+```
+
+---
+
+# Other useful commands
+
+```r
+devtools::load_all()
+```
+
