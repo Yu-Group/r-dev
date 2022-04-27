@@ -1,6 +1,6 @@
 ---
-title: "Yu Group software series: R"
-subtitle: "R dev | simChef + dgpoix | vdocs"
+title: "Yu Group Software: R"
+subtitle: "R dev <> simChef <> vdocs"
 author: "Tiffany Tang and James Duncan"
 date: "2022/04/27"
 output:
@@ -9,6 +9,7 @@ output:
     lib_dir: libs # path to local remark.js library
     css: xaringan-themer.css
     nature:
+      highlightLanguage: r
       highlightStyle: googlecode # solarized-dark
       countIncrementalSlides: false
       navigation:
@@ -22,7 +23,17 @@ xaringanthemer::style_mono_accent(
   text_font_google   = google_font("Montserrat", "300", "300i"),
   code_font_google   = google_font("Fira Mono")
 )
+```
+
+```{r xariganExtra, echo=FALSE}
 xaringanExtra::use_fit_screen()
+xaringanExtra::use_extra_styles(
+  hover_code_line = TRUE,
+  mute_unhighlighted_code = TRUE
+)
+xaringanExtra::use_progress_bar(color = "#0051BA", location = "top")
+
+# xaringanExtra::use_logo("images/simChef.png", link_url="https://github.com/Yu-Group/simChef")
 ```
 
 ```{css, echo=FALSE}
@@ -37,12 +48,28 @@ pre[class] {
 
 .remark-code, .remark-inline-code  { font-family: 'Ubuntu Mono'; }
 a, a > .remark-inline-code { color: rgb(249, 38, 114); }
+
 .remark-slide-scaler { overflow-y: auto; }
+
+ul { list-style-type: circle; }
+
+.xaringan-extra-logo.simChef {
+    width: 110px;
+    height: 128px;
+    z-index: 0;
+    background-image: url(images/simChef.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: absolute;
+    top: 1em;
+    right: 1em;
+}
 ```
 
 # testthat
 
 Testing is an important part of the data science workflow!
+
 `r emo::ji("paperclips")`[`testthat`](https://testthat.r-lib.org/)  makes it simple.
 
 ```{r, eval=FALSE}
@@ -58,18 +85,20 @@ testthat::expect_equal(hitchhiker(42), 42)
 ## [1] 43 - 42 == 1
 ```
 Other useful `testthat` verbs:
-* `expect_identical` -- test if objects are the same
-* `expect_true`, `expect_false`
-* `expect_lt`, `expect_gt`
-* `expect_error`, `expect_warning`
-* `expect_snapshot` -- saves stdout and later compares with this gold standard
+```{r, eval=FALSE}
+expect_identical() # test if objects are the same
+expect_true(); expect_false()
+expect_lt(); expect_gt()
+expect_error(); expect_warning()
+expect_snapshot() # saves stdout and later compares with this gold standard
+```
 
 ---
 
 # testthat
 
 `r emo::ji("file_folder")` `testthat` tests should be in a directory called `tests/testthat/` next to your
-project's `R/` directory. (`usethis::use_testthat` can set that up for you.) 
+project's `R/` directory. (`usethis::use_testthat` can set that up for you.)
 
 `r emo::ji("page_facing_up")` `testthat` test files should be named like `test-*.R`, e.g. `test-xyz.R`. Again,
 there's a `usethis` function to create this: `usethis::use_test("xyz")`.
@@ -151,32 +180,9 @@ They help automate:
 * (documentation) website deployment
 * many other repetitive tasks that run when code changes
 
-Here's the `usethis` command: `usethis::use_github_actions("check-standard")`.
-
 ---
 
-# Example: Automated grading of STAT 215A lab reports
-
-`r emo::ji("paperclips")`[auto215a](https://github.com/Yu-Group/auto215a/) (private repo)
-
-
-
----
-
-# `Yu-Group` Actions
-
-GitHub Action are a key part of the group's project / software development
-workflow, used by:
-
-* `simChef`
-* `vdocs`
-* `vflow`
-* `imodels`
-* Many more projects and hopefully yours too!
-
----
-
-# r-lib GitHub actions
+# r-lib's GitHub actions
 
 Many of the core R packages we've mentioned are maintained in the
 `r emo::ji("paperclips")`[`r-lib`](https://github.com/r-lib) GitHub organization, including:
@@ -189,14 +195,94 @@ Many of the core R packages we've mentioned are maintained in the
 `r-lib` also maintains a very useful repo with many GitHub Actions scripts that
 you can use in your workflows: `r emo::ji("paperclips")`[r-lib/actions](https://github.com/r-lib/actions).
 
+Of course there's a `usethis` command:
+```{r, eval=FALSE}
+# creates an action to run R CMD check
+usethis::use_github_actions("check-standard")`
+```
+
+You can swap out `"check-standard"` for any of the example actions in [`r-lib/actions/examples/`](https://github.com/r-lib/actions/tree/v2-branch/examples).
+
+---
+
+# Example: Automated grading of STAT 215A lab reports
+
+`r emo::ji("paperclips")`[auto215a](https://github.com/Yu-Group/auto215a/) (private repo)
+
+```yaml
+jobs:
+  run-grader:
+
+    ...
+
+    strategy:
+      fail-fast: false
+      matrix:
+        student:
+          # add all the students here
+          - {repo: 'student1-username/stat215a', id: 'anon-id1'}
+          - {repo: 'student2-username/stat215a', id: 'anon-id2'}
+        lab:
+          # add the lab(s) / function(s) to test here
+          # each function should be in a separate .R file of the same name
+          - {R-dir: 'lab3/R', fun: 'similarity_fn'}
+
+    steps:
+        # get this repo and set as the default working directory
+      - uses: actions/checkout@v3
+
+        # setup R
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install grader dependencies
+        run: |
+          ## --------------------------------------------------------------------
+          install.packages(c("remotes", "lintr"))
+          remotes::install_github("Yu-Group/auto215a/auto215aR")
+        shell: Rscript {0}
+
+        # checkout student repo
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ matrix.student.repo }}
+          path: ./${{ matrix.student.id }}
+
+      - name: Install student dependencies, test their functions, and lint their code
+        run: |
+          ## --------------------------------------------------------------------
+          # install
+          remotes::install_deps()
+          # source
+          source("${{ matrix.lab.R-dir }}/${{ matrix.lab.fun }}.R")
+          # test
+          auto215aR::test_${{ matrix.lab.fun }}(${{ matrix.lab.fun }}, submit_id = "${{ matrix.student.id }}")
+          # lint
+          lintr::lint("${{ matrix.lab.R-dir }}/${{ matrix.lab.fun }}.R")
+        shell: Rscript {0}
+        working-directory: ./${{ matrix.student.id }}
+```
+
+---
+
+# `Yu-Group` Actions
+
+GitHub Action are a key part of the group's project / software development
+workflow, used by:
+
+* `simChef`
+* `vdocs`
+* `vflow`
+* `imodels`
+* Many more and hopefully yours too!
+
 ---
 
 # xaringan
 
-We created these slides in `Rmarkdown` via the package `r
-emo::ji("paperclips")`[`xaringan`](https://bookdown.org/yihui/rmarkdown/xaringan.html).
-
-How these slides were created:
+We created these slides in `Rmarkdown` via the package `r emo::ji("paperclips")`[`xaringan`](https://bookdown.org/yihui/rmarkdown/xaringan.html).
 
 ```{r, eval=FALSE}
 install.packages("xaringan")
@@ -209,16 +295,306 @@ rmarkdown::render("slides.Rmd")
 
 # push the slides to GitHub pages
 # see `?gh_token_help` for info on creating / registering a PAT
-# TODO: the repo needs to be public for this to work
 usethis::use_github_pages(path = "slides")
 ```
+
 * `r emo::ji("paperclips")`[xaringanthemer](https://pkg.garrickadenbuie.com/xaringanthemer)
 * `r emo::ji("paperclips")`[xaringanExtra](https://pkg.garrickadenbuie.com/xaringanExtra)
+
 
 ---
 
 # Additional resources
 
-* `r emo::ji("paperclips")`["Advanced R" (2nd edition)](https://adv-r.hadley.nz)
-* `r emo::ji("paperclips")`["R Packages" (2nd edition)](https://r-pkgs.org/)
-* `r emo::ji("paperclips")`["bookdown: Authoring Books and Technical Documents with R Markdown"](https://bookdown.org/yihui/bookdown/)
+* `r emo::ji("paperclips")`[Advanced R (2nd edition)](https://adv-r.hadley.nz)
+* `r emo::ji("paperclips")`[R Packages (2nd edition)](https://r-pkgs.org/)
+* `r emo::ji("paperclips")`[bookdown: Authoring Books and Technical Documents with R Markdown](https://bookdown.org/yihui/bookdown/)
+* `r emo::ji("paperclips")` [blogdown: Creating Websites with R Markdown](https://bookdown.org/yihui/blogdown/)
+* Many, many books in `r emo::ji("paperclips")`[The R Series](https://www.routledge.com/Chapman--HallCRC-The-R-Series/book-series/CRCTHERSER)
+
+---
+
+# simChef
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+`simChef` is an R package to facilitate **transparent** and **reliable** simulation
+experiments, with PCS as the guiding framework.
+
+```{css, echo=FALSE}
+.faces > img {
+    width: 75%;
+    padding-top: 10%;
+}
+```
+
+```{r, eval=FALSE}
+devtools::install_github("Yu-Group/simChef")
+```
+
+.center.faces[![collaborators on simChef](images/simChef-faces.png)]
+
+---
+
+# simChef
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+`simChef` is an R package to facilitate **transparent** and **reliable** simulation
+experiments, with PCS as the guiding framework.
+
+.center.recipe1[![recipe for a principled simulation](images/recipe-1.png)]
+
+---
+
+# simChef
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+`simChef` is an R package to facilitate **transparent** and **reliable** simulation
+experiments, with PCS as the guiding framework.
+
+.center.recipe2[![recipe for a principled simulation](images/recipe-2.png)]
+
+---
+
+# simChef
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+`simChef` is an R package to facilitate **transparent** and **reliable** simulation
+experiments, with PCS as the guiding framework.
+
+.center.recipe3[![recipe for a principled simulation](images/recipe-3.png)]
+
+---
+
+# simChef
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+`simChef` is an R package to facilitate **transparent** and **reliable** simulation
+experiments, with PCS as the guiding framework.
+
+.center.recipe4[![recipe for a principled simulation](images/recipe-4.png)]
+
+---
+
+# simChef's purpose
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+**Goal**: Make it easy to create simulations that are:
+* **Transparent**
+    * Scientific question **clearly defined** and connected to experiments.
+    * Code should be well-documented and results communicated **honestly**.
+* **Realistic**
+    * Simulated data should resemble the **real world** and should use **real
+      data** as much as possible.
+    * Includes scenarios that should **challenge** the methods in question.
+* **Intuitive**
+    * Simulation code should be **readable** and include less **boilerplate**.
+    * It should be quick and painless for others to **understand** what you did.
+* **Efficient**
+    * Simulations should take advantage of **distributed computation** given the
+      embarrassingly parallel nature of replicates.
+    * Results should be **easily to share**.
+* **Reproducible**
+    * Simulation code should be **consistent** across runs, users, and computing
+      environments.
+
+---
+
+# simChef basic usage
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+```{r, eval=FALSE}
+experiment <- create_experiment(name = "my-exper")
+```
+
+---
+
+# simChef basic usage
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+```{r, eval=FALSE}
+experiment <- create_experiment(name = "my-exper") %>%
+  add_dgp(dgp) # DGP = data-generating process
+```
+
+---
+
+# simChef basic usage
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+```{r, eval=FALSE}
+experiment <- create_experiment(name = "my-exper") %>%
+  add_dgp(dgp) %>% # DGP = data-generating process
+  add_method(method) # method under study
+```
+
+---
+
+# simChef basic usage
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+```{r, eval=FALSE}
+experiment <- create_experiment(name = "my-exper") %>%
+  add_dgp(dgp) %>% # DGP = data-generating process
+  add_method(method) %>% # method under study
+  add_evaluator(eval) # evaluates simulation results
+```
+
+---
+
+# simChef basic usage
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+```{r, eval=FALSE}
+experiment <- create_experiment(name = "my-exper") %>%
+  add_dgp(dgp) %>% # DGP = data-generating process
+  add_method(method) %>% # method under study
+  add_evaluator(eval) %>% # evaluates simulation results
+  add_visualizer(viz) # creates plots / tables / other visual summaries for Rmd
+```
+
+---
+
+# simChef basic usage
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+```{r, eval=FALSE}
+experiment <- create_experiment(name = "my-exper") %>%
+  add_dgp(dgp) %>% # DGP = data-generating process
+  add_method(method) %>% # method under study
+  add_evaluator(eval) %>% # evaluates simulation results
+  add_visualizer(viz) # creates plots / tables / other visual summaries for Rmd
+
+run_experiment(experiment,
+               n_reps = 100, # number of replicates for each combo of (dgp, method)
+               save = TRUE, # save results to disk
+               checkpoint_n_reps = 20) # save intermediate results as we go
+```
+
+---
+
+# DGPs
+
+User's can write their own custom DGP functions.
+
+```{r, eval=FALSE}
+my_linear_gaussian_dgp_fun <- function(n, p) {
+
+  ## generate covariate matrix
+  X <- matrix(rnorm(n = n*p), nrow = n)
+
+  ## sample linear model coefficients
+  betas <- sample(
+    c(0, 0.5, 1), size = p,
+    replace = TRUE, prob = c(0.5, 0.3, 0.2)
+  )
+
+  ## create a linear response y with additive gaussian noise
+  y <- cbind(1, X) %*% c(1, betas) + rnorm(n)
+
+  return(list(X = X, y = y, betas = betas))
+}
+```
+
+---
+
+# DGPs
+
+This function is then passed to `simChef` to create a `DGP` (with optional
+default values for `n` and `p`).
+
+```{r, eval=FALSE}
+my_linear_gaussian_dgp_fun <- function(n, p) {
+  ...
+}
+
+dgp <- create_dgp(
+  my_linear_gaussian_dgp_fun,
+  n = 100, p = 3
+)
+
+simChef::list_to_tibble_row(dgp$generate())
+
+## # A tibble: 1 × 3
+## X                 y               betas
+## <list>            <list>          <list>
+## 1 <dbl [100 × 3]> <dbl [100 × 1]> <dbl [3]>
+```
+
+---
+
+# `dgpoix` `r emo::ji("carrot")` A reusable library of DGPs
+
+DGPs are the key **ingredients** of every simulation.
+
+We can quickly recreate the last example using `dgpoix` ("dee-gee-pwaa", rhymes
+with mirepoix).
+
+```{r, eval=FALSE}
+linear_gaussian_dgp <- create_dgp(
+  dgpoix::linear_gaussian_dgp, n = 100, p_obs = 3,
+  intercept = 1, err = rnorm # params for linear_gaussian_dgp
+  betas = dgpoix::coef_sampler,
+  coefs = c(0, 0.5, 1), probs = c(0.5, 0.3, 0.2) # params for betas_sampler
+)
+```
+
+`dgpoix` is currently in very early development, so expect the API to change.
+
+---
+
+# Varying across DGP / method parameters
+
+After adding DGPs and methods, we can set out experiment to vary across multiple
+parameter values.
+
+```{r, eval=FALSE}
+
+elnet <- create_method(
+  function(X, y, alpha=1) {
+    fit <- glmnet::glmnet(
+      x = X, y = y, family = "gaussian", alpha = alpha
+    ) %>% broom::tidy()
+    return(fit)
+  }
+)
+
+experiment <- create_experiment() %>%
+  add_dgp(linear_gaussian_dgp) %>%
+  add_method(elnet) %>%
+  add_vary_across(
+    linear_gaussian_dgp,
+    p_obs = c(10, 100),
+    p_unobs = c(2, 20),
+    # varying over a vector-valued parameter
+    probs = list(c(0.5, 0.3, 0.2), c(0.8, 0.1, 0.1))
+  ) %>%
+  add_vary_across(
+    elnet, alpha = c(0, 0.5, 1)
+  )
+```
+
+---
+
+# Run the experiment
+
+We can run the experiment in parallel by setting a `future` plan before calling
+`fit_experiment`.
+
+```{r, eval=FALSE}
+future::plan(future::multicore)
+
+results <- fit_experiment(experiment, n_reps = 100)
+```
+
