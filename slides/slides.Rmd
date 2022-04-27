@@ -1,60 +1,91 @@
 ---
 title: "Yu Group software series: R"
-subtitle: "R package dev | simChef + dgpoix | vdocs"
+subtitle: "R dev | simChef + dgpoix | vdocs"
 author: "Tiffany Tang and James Duncan"
 date: "2022/04/27"
 output:
   xaringan::moon_reader:
     self_contained: true
     lib_dir: libs # path to local remark.js library
+    css: xaringan-themer.css
     nature:
-      highlightStyle: github
+      highlightStyle: googlecode # solarized-dark
       countIncrementalSlides: false
+      navigation:
+        scroll: false
 ---
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+xaringanthemer::style_mono_accent(
+  base_color = "#00b0da",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono")
+)
+xaringanExtra::use_fit_screen()
+```
+
+```{css, echo=FALSE}
+pre {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+pre[class] {
+  max-height: 100px;
+}
+
+.remark-code, .remark-inline-code  { font-family: 'Ubuntu Mono'; }
+a, a > .remark-inline-code { color: rgb(249, 38, 114); }
+.remark-slide-scaler { overflow-y: auto; }
+```
 
 # testthat
 
 Testing is an important part of the data science workflow!
+`r emo::ji("paperclips")`[`testthat`](https://testthat.r-lib.org/)  makes it simple.
 
-[`testthat`](https://testthat.r-lib.org/) makes it simple.
-
-```{r, error=TRUE}
+```{r, eval=FALSE}
 hitchhiker <- function(x) {
   return(x + 1)
 }
 
-library(testthat)
-# order of args is (actual, expected)
-expect_equal(hitchhiker(41), 42)
-expect_equal(hitchhiker(42), 42)
+testthat::expect_equal(hitchhiker(41), 42)
+testthat::expect_equal(hitchhiker(42), 42)
+
+## Error: hitchhiker(42) not equal to 42.
+## 1/1 mismatches
+## [1] 43 - 42 == 1
 ```
-
 Other useful `testthat` verbs:
-
 * `expect_identical` -- test if objects are the same
 * `expect_true`, `expect_false`
 * `expect_lt`, `expect_gt`
 * `expect_error`, `expect_warning`
-* `expect_snapshot` -- saves printed outputs and compares later with this gold standard
+* `expect_snapshot` -- saves stdout and later compares with this gold standard
 
 ---
 
 # testthat
 
-`testthat` tests should be in a directory called `tests/testthat/` next to your
+`r emo::ji("file_folder")` `testthat` tests should be in a directory called `tests/testthat/` next to your
 project's `R/` directory. (`usethis::use_testthat` can set that up for you.) 
 
-`testthat` test files should be named like `test-*.R`, e.g. `test-xyz.R`.
+`r emo::ji("page_facing_up")` `testthat` test files should be named like `test-*.R`, e.g. `test-xyz.R`. Again,
+there's a `usethis` function to create this: `usethis::use_test("xyz")`.
 
-`r emo::ji("+1")`: create one `test-*.R` file for every `*.R` file in `R/`, e.g.,
+`r emo::ji("+1")` create one `test-*.R` file for every `*.R` file in `R/`, e.g.,
 
 Here's an example from `simChef`:
 ```{r, eval=FALSE}
 test_that("fit_experiment works properly with future::multicore", {
+
   # multicore plan isn't supported on windows
   skip_on_os("windows")
+
   # fit_experiment_fixture() returns sequential and parallel simulation results
   results <- fit_experiment_fixture(future::multicore)
+
   expect_identical(results[[1]], results[[2]])
 })
 ```
@@ -63,7 +94,8 @@ test_that("fit_experiment works properly with future::multicore", {
 
 # withr
 
-Another helpful package for writing testing code and much more.
+`r emo::ji("paperclips")`[`withr`](https://withr.r-lib.org/index.html) is another helpful package for
+writing testing code and much more.
 
 * Prevents unintended side effects (aka, hard to squash `r emo::ji("mosquito")`!): `with_environment()`
 * Cleans up temporary state: `with_tempfile()`
@@ -109,7 +141,7 @@ fit_experiment_fixture <- function(plan) {
 
 # GitHub Actions
 
-[GitHub Actions](https://docs.github.com/en/actions): automated scripts that run
+ `r emo::ji("paperclips")`[GitHub Actions](https://docs.github.com/en/actions): automated scripts that run
 on GitHub's servers when you make changes to a repo.
 
 They help automate:
@@ -119,17 +151,19 @@ They help automate:
 * (documentation) website deployment
 * many other repetitive tasks that run when code changes
 
----
-
-# Automated grading for STAT 215A lab reports
-
-[auto215a](https://github.com/Yu-Group/auto215a/) (private repo)
-
-
+Here's the `usethis` command: `usethis::use_github_actions("check-standard")`.
 
 ---
 
-# GitHub Actions
+# Example: Automated grading of STAT 215A lab reports
+
+`r emo::ji("paperclips")`[auto215a](https://github.com/Yu-Group/auto215a/) (private repo)
+
+
+
+---
+
+# `Yu-Group` Actions
 
 GitHub Action are a key part of the group's project / software development
 workflow, used by:
@@ -142,14 +176,25 @@ workflow, used by:
 
 ---
 
+# r-lib GitHub actions
+
+Many of the core R packages we've mentioned are maintained in the
+`r emo::ji("paperclips")`[`r-lib`](https://github.com/r-lib) GitHub organization, including:
+* `devtools`
+* `roxygen2`
+* `testthat`
+* `pkgdown`
+* `usethis`
+
+`r-lib` also maintains a very useful repo with many GitHub Actions scripts that
+you can use in your workflows: `r emo::ji("paperclips")`[r-lib/actions](https://github.com/r-lib/actions).
+
 ---
 
 # xaringan
 
-We created these slides in `Rmarkdown` via the package `xaringan`.
-
-We copied the skeleton Rmarkdown template copied from
-[here](https://bookdown.org/yihui/rmarkdown/xaringan-start.html) and modified.
+We created these slides in `Rmarkdown` via the package `r
+emo::ji("paperclips")`[`xaringan`](https://bookdown.org/yihui/rmarkdown/xaringan.html).
 
 How these slides were created:
 
@@ -167,10 +212,13 @@ rmarkdown::render("slides.Rmd")
 # TODO: the repo needs to be public for this to work
 usethis::use_github_pages(path = "slides")
 ```
+* `r emo::ji("paperclips")`[xaringanthemer](https://pkg.garrickadenbuie.com/xaringanthemer)
+* `r emo::ji("paperclips")`[xaringanExtra](https://pkg.garrickadenbuie.com/xaringanExtra)
 
 ---
 
 # Additional resources
 
-* ["Advanced R" (2nd edition)](https://adv-r.hadley.nz)
-* ["R Packages" (2nd edition)](https://r-pkgs.org/)
+* `r emo::ji("paperclips")`["Advanced R" (2nd edition)](https://adv-r.hadley.nz)
+* `r emo::ji("paperclips")`["R Packages" (2nd edition)](https://r-pkgs.org/)
+* `r emo::ji("paperclips")`["bookdown: Authoring Books and Technical Documents with R Markdown"](https://bookdown.org/yihui/bookdown/)
