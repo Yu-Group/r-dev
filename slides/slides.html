@@ -728,7 +728,11 @@ usethis::use_tidy_style()
 
 Testing is an important part of the data science workflow!
 
+--
+
 🖇[`testthat`](https://testthat.r-lib.org/)  makes it simple.
+
+--
 
 
 ```r
@@ -743,6 +747,9 @@ testthat::expect_equal(hitchhiker(42), 42)
 ## 1/1 mismatches
 ## [1] 43 - 42 == 1
 ```
+
+--
+
 Other useful `testthat` verbs:
 
 ```r
@@ -760,10 +767,16 @@ expect_snapshot() # saves stdout and later compares with this gold standard
 📁 `testthat` tests should be in a directory called `tests/testthat/` next to your
 project's `R/` directory. (`usethis::use_testthat` can set that up for you.)
 
+--
+
 📄 `testthat` test files should be named like `test-*.R`, e.g. `test-xyz.R`. Again,
 there's a `usethis` function to create this: `usethis::use_test(&quot;xyz&quot;)`.
 
+--
+
 👍 create one `test-*.R` file for every `*.R` file in `R/`, e.g.,
+
+--
 
 Here's an example from `simChef`:
 
@@ -788,8 +801,17 @@ test_that(&quot;fit_experiment works properly with future::multicore&quot;, {
 writing testing code and much more.
 
 * Prevents unintended side effects (aka, hard to squash 🦟!): `with_environment()`
+
+--
+
 * Cleans up temporary state: `with_tempfile()`
+
+--
+
 * Helps with reproducibility: `with_seed()`
+
+--
+
 * Can run arbitrary code when exiting a frame in the call stack: `defer()`, `defer_parent()`
 
 ---
@@ -838,8 +860,17 @@ on GitHub's servers when you make changes to a repo.
 They help automate:
 
 * testing
+
+--
+
 * code &quot;linting&quot; (syntax / style checking)
+
+--
+
 * (documentation) website deployment
+
+--
+
 * many other repetitive tasks that run when code changes
 
 ---
@@ -854,8 +885,12 @@ Many of the core R packages we've mentioned are maintained in the
 * `pkgdown`
 * `usethis`
 
+--
+
 `r-lib` also maintains a very useful repo with many GitHub Actions scripts that
 you can use in your workflows: 🖇[r-lib/actions](https://github.com/r-lib/actions).
+
+--
 
 Of course there's a `usethis` command:
 
@@ -863,6 +898,8 @@ Of course there's a `usethis` command:
 # creates an action to run R CMD check
 usethis::use_github_actions(&quot;check-standard&quot;)`
 ```
+
+--
 
 You can swap out `&quot;check-standard&quot;` for any of the example actions in [`r-lib/actions/examples/`](https://github.com/r-lib/actions/tree/v2-branch/examples).
 

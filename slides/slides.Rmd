@@ -302,7 +302,11 @@ usethis::use_tidy_style()
 
 Testing is an important part of the data science workflow!
 
+--
+
 `r emo::ji("paperclips")`[`testthat`](https://testthat.r-lib.org/)  makes it simple.
+
+--
 
 ```{r, eval=FALSE}
 hitchhiker <- function(x) {
@@ -316,6 +320,9 @@ testthat::expect_equal(hitchhiker(42), 42)
 ## 1/1 mismatches
 ## [1] 43 - 42 == 1
 ```
+
+--
+
 Other useful `testthat` verbs:
 ```{r, eval=FALSE}
 expect_identical() # test if objects are the same
@@ -332,10 +339,16 @@ expect_snapshot() # saves stdout and later compares with this gold standard
 `r emo::ji("file_folder")` `testthat` tests should be in a directory called `tests/testthat/` next to your
 project's `R/` directory. (`usethis::use_testthat` can set that up for you.)
 
+--
+
 `r emo::ji("page_facing_up")` `testthat` test files should be named like `test-*.R`, e.g. `test-xyz.R`. Again,
 there's a `usethis` function to create this: `usethis::use_test("xyz")`.
 
+--
+
 `r emo::ji("+1")` create one `test-*.R` file for every `*.R` file in `R/`, e.g.,
+
+--
 
 Here's an example from `simChef`:
 ```{r, eval=FALSE}
@@ -359,8 +372,17 @@ test_that("fit_experiment works properly with future::multicore", {
 writing testing code and much more.
 
 * Prevents unintended side effects (aka, hard to squash `r emo::ji("mosquito")`!): `with_environment()`
+
+--
+
 * Cleans up temporary state: `with_tempfile()`
+
+--
+
 * Helps with reproducibility: `with_seed()`
+
+--
+
 * Can run arbitrary code when exiting a frame in the call stack: `defer()`, `defer_parent()`
 
 ---
@@ -408,8 +430,17 @@ on GitHub's servers when you make changes to a repo.
 They help automate:
 
 * testing
+
+--
+
 * code "linting" (syntax / style checking)
+
+--
+
 * (documentation) website deployment
+
+--
+
 * many other repetitive tasks that run when code changes
 
 ---
@@ -424,14 +455,20 @@ Many of the core R packages we've mentioned are maintained in the
 * `pkgdown`
 * `usethis`
 
+--
+
 `r-lib` also maintains a very useful repo with many GitHub Actions scripts that
 you can use in your workflows: `r emo::ji("paperclips")`[r-lib/actions](https://github.com/r-lib/actions).
+
+--
 
 Of course there's a `usethis` command:
 ```{r, eval=FALSE}
 # creates an action to run R CMD check
 usethis::use_github_actions("check-standard")`
 ```
+
+--
 
 You can swap out `"check-standard"` for any of the example actions in [`r-lib/actions/examples/`](https://github.com/r-lib/actions/tree/v2-branch/examples).
 
