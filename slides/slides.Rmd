@@ -7,9 +7,10 @@ output:
   xaringan::moon_reader:
     self_contained: true
     lib_dir: libs # path to local remark.js library
-    css: xaringan-themer.css
+    css: [xaringan-themer.css, "css/my-style.css"]
     nature:
       highlightStyle: googlecode # solarized-dark
+      highlightSpans: true
       countIncrementalSlides: false
       navigation:
         scroll: false
@@ -18,9 +19,9 @@ output:
 ```{r xaringan-themer, include=FALSE, warning=FALSE}
 xaringanthemer::style_mono_accent(
   base_color = "#00b0da",
-  header_font_google = google_font("Josefin Sans"),
-  text_font_google   = google_font("Montserrat", "300", "300i"),
-  code_font_google   = google_font("Fira Mono")
+  header_font_google = xaringanthemer::google_font("Josefin Sans"),
+  text_font_google   = xaringanthemer::google_font("Montserrat", "300", "300i"),
+  code_font_google   = xaringanthemer::google_font("Fira Mono")
 )
 xaringanExtra::use_fit_screen()
 ```
@@ -39,6 +40,235 @@ pre[class] {
 a, a > .remark-inline-code { color: rgb(249, 38, 114); }
 .remark-slide-scaler { overflow-y: auto; }
 ```
+
+# Roadmap
+
+### 1. <span style="color:#4285f4">R package development</span>
+- *Walkthrough*: creating a toy R package
+- Code documentation and package website
+- Unit testing
+- Integration with GitHub Actions
+
+### 2. <span style="color:#4285f4">`simChef`</span> for cooking up simulations in R
+### 3. <span style="color:#4285f4">`vdocs`</span> (short for veridical docs)
+
+<br>
+### Resources available at: https://github.com/Yu-Group/r-dev 
+
+---
+
+# Why bother with R packages?
+
+- For sharing re-usable code with others
+
+```r
+devtools::install_github("Yu-Group/simChef")
+
+library(simChef)
+# You can now use functions from simChef!
+```
+
+--
+
+- For organizing your code
+
+<center><img src="images/r_pkg_structure.png" width="300"></center>
+
+--
+
+- Lots of helpful tools that are tied to this package structure (e.g., [`usethis`](https://usethis.r-lib.org/), [`devtools`](https://devtools.r-lib.org/), [`roxygen2`](https://roxygen2.r-lib.org/), [`pkgdown`](https://pkgdown.r-lib.org/))
+
+---
+
+# Let's get started with a toy R package
+
+```r
+# create package with tidyverse conventions implemented
+usethis::create_tidy_package("R.pkg.ex")  
+```
+
+--
+
+<br>
+
+This will
+
+- create a new package named `R.pkg.ex`
+- apply as many of the tidyverse conventions as possible, 
+- issue a few reminders
+- activate the new package.
+
+<img src="images/r_tidy_pkg_structure.png" width="200" style="position: absolute; right: 40px; top: 250px">
+
+--
+
+<br><br>
+
+```r
+# or alternatively, a more barebones start
+usethis::create_package("R.pkg.ex")
+```
+
+---
+
+# Writing a reusable R function
+
+All R functions belong in the `R/` directory.
+
+Let's create a file called `R/example_function.R` and add the following to the file:
+
+--
+
+```{r}
+remove_constant_columns <- function(X) {
+  const_cols <- purrr::map_lgl(X, ~all(duplicated(.x)[-1L]))
+  X_cleaned <- X %>%
+    dplyr::select(which(!const_cols))
+  return(const_cols)
+}
+```
+
+--
+
+What does this function do?
+
+---
+
+# Documentation with `roxygen2`
+
+```r
+#' Remove constant columns in data
+#'
+#' @description Given some data X, removes all columns in the data that are a
+#'   constant value (while ignoring NAs).
+#'
+#' @param X A data frame.
+#'
+#' @return A data frame where constant columns have been removed.
+#'
+#' @examples
+#' X <- data.frame(a = c(1, 1, 1), b = c(1, 2, 3))
+#' X_cleaned <- remove_constant_columns(X)
+#' 
+#' @export
+remove_constant_columns <- function(X) {
+  const_cols <- purrr::map_lgl(X, ~all(duplicated(.x)[-1L]))
+  X_cleaned <- X %>%
+    dplyr::select(which(!const_cols))
+  return(const_cols)
+}
+```
+
+We can then render the documentation easily via:
+
+```r
+devtools::document()  # or equivalently, `roxygen2::roxygenise()`
+```
+
+--
+
+After this, we can see the function documentation via the usual:
+
+```r
+? remove_constant_columns
+```
+
+<center><img src="images/documentation.png" width="300"></center>
+
+---
+
+# Managing dependencies
+
+Note however that `remove_constant_columns` depends on other packages.
+
+```{r, eval = FALSE}
+remove_constant_columns <- function(X) {
+  const_cols <- `purrr`::map_lgl(X, ~all(duplicated(.x)[-1L]))
+  X_cleaned <- X `%>%`
+    `dplyr`::select(which(!const_cols))
+  return(const_cols)
+}
+```
+
+--
+
+The `usethis` package makes it easy to manage these dependencies:
+
+```r
+usethis::use_package("purrr")
+usethis::use_package("dplyr")
+usethis::use_pipe()
+```
+
+---
+
+# Additional documentation
+
+### Readme
+
+This is the first thing that people will see on GitHub (and package website).
+
+The `README.Rmd` file has already been initialized by `usethis::create_tidy_package()`. We next need to render the README.Rmd into a README.md via:
+
+```r
+devtools::build_readme()
+```
+
+--
+
+### Creating vignettes
+
+Vignettes are a great way to teach others how to use your code/package.
+
+To begin creating a vignette, `usethis` provides a nice starter template:
+
+```r
+usethis::use_vignette("example_vignette")
+```
+
+This initializes a vignette found at `vignettes/example_vignette.Rmd`
+
+---
+
+# Creating a website
+
+So far, we have created an R package with a toy R function, some documentation, and a vignette.
+
+An easy way to organize all this documentation and to improve accessibility is through a package website.
+
+```r
+pkgdown::build_site()
+```
+
+<iframe src="docs/index.html" width=100% height=60%></iframe>
+
+---
+
+# Other useful commands
+
+To check whether or not the package can be built successfully:
+
+```r
+devtools::check()
+```
+
+[Note that `devtools::check()` rebuilds all the accompanying documentation, runs all unit tests, and goes through CRAN checks.]
+
+<br>
+To quickly load in the package under development and its most recent changes:
+
+```r
+devtools::load_all()
+```
+
+<br>
+To automatically style source code according to the tidyverse style guide:
+
+```r
+usethis::use_tidy_style()
+```
+
+---
 
 # testthat
 
@@ -222,3 +452,16 @@ usethis::use_github_pages(path = "slides")
 * `r emo::ji("paperclips")`["Advanced R" (2nd edition)](https://adv-r.hadley.nz)
 * `r emo::ji("paperclips")`["R Packages" (2nd edition)](https://r-pkgs.org/)
 * `r emo::ji("paperclips")`["bookdown: Authoring Books and Technical Documents with R Markdown"](https://bookdown.org/yihui/bookdown/)
+
+---
+
+class: no-padding
+
+<iframe src="rmd/linear_regression_output.html" width=100% height=100%></iframe>
+
+---
+
+class: no-padding
+
+<iframe src="rmd/TCGA-BRCA-Example.html" width=100% height=100%></iframe>
+

@@ -24,10 +24,11 @@ The goal of R.pkg.ex is to ...
 
 ## Installation
 
-You can install the development version of R.pkg.ex like so:
+You can install the development version of R.pkg.ex from [GitHub](https://github.com/) with:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+# install.packages("devtools")
+devtools::install_github("Yu-Group/r-dev")
 ```
 
 ## Example
