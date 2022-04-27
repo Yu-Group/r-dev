@@ -600,28 +600,34 @@ experiments, with PCS as the guiding framework.
 
 ---
 
-# simChef's purpose
+# simChef's goals
 
 <a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
 
-**Goal**: Make it easy to create simulations that are:
-* **Transparent**
-    * Scientific question **clearly defined** and connected to experiments.
-    * Code should be well-documented and results communicated **honestly**.
-* **Realistic**
-    * Simulated data should resemble the **real world** and should use **real
-      data** as much as possible.
-    * Includes scenarios that should **challenge** the methods in question.
-* **Intuitive**
-    * Simulation code should be **readable** and include less **boilerplate**.
-    * It should be quick and painless for others to **understand** what you did.
-* **Efficient**
-    * Simulations should take advantage of **distributed computation** given the
-      embarrassingly parallel nature of replicates.
-    * Results should be **easily to share**.
-* **Reproducible**
-    * Simulation code should be **consistent** across runs, users, and computing
-      environments.
+**Transparent**
+* Scientific question **clearly defined** and communicated **honestly**.
+
+--
+
+**Realistic**
+* Synthetic data should resemble the **real world** and should use **real data**
+as much as possible.
+
+--
+
+**Intuitive**
+* Simulation code should be **readable** and **understandable**.
+
+--
+
+**Efficient**
+* Simulations should take advantage of **distributed computation**.
+
+--
+
+**Reproducible**
+* Results should be **consistent** across runs, users, and computing
+environments and they should be **easy to share**.
 
 ---
 
@@ -696,10 +702,39 @@ experiment <- create_experiment(name = "my-exper") %>%
   add_evaluator(eval) %>% # evaluates simulation results
   add_visualizer(viz) # creates plots / tables / other visual summaries for Rmd
 
-run_experiment(experiment,
+fit_experiment(experiment,
                n_reps = 100, # number of replicates for each combo of (dgp, method)
                save = TRUE, # save results to disk
                checkpoint_n_reps = 20) # save intermediate results as we go
+```
+
+---
+
+# simChef basic usage
+
+<a class="xaringan-extra-logo simChef" href="https://github.com/Yu-Group/simChef"></a>
+
+```{r, eval=FALSE}
+experiment <- create_experiment(name = "my-exper") %>%
+  add_dgp(dgp) %>% # DGP = data-generating process
+  add_method(method) %>% # method under study
+  add_evaluator(eval) %>% # evaluates simulation results
+  add_visualizer(viz) # creates plots / tables / other visual summaries for Rmd
+
+fit_experiment(experiment,
+               n_reps = 100, # number of replicates for each combo of (dgp, method)
+               save = TRUE, # save results to disk
+               checkpoint_n_reps = 20) # save intermediate results as we go
+
+# A tibble: 100 × 9
+   .rep  .dgp_name .method_name param1 param2 vec          .n  .rho .noise_level
+   <chr> <chr>     <chr>         <dbl>  <dbl> <list>    <dbl> <dbl>        <dbl>
+ 1 1     dgp1      method1           1      3 <dbl [3]>    10   0.5            1
+ 2 1     dgp1      method1           2      3 <dbl [3]>    10   0.5            1
+ 3 1     dgp1      method1           1      4 <dbl [3]>    10   0.5            1
+ 4 1     dgp1      method1           2      4 <dbl [3]>    10   0.5            1
+ 5 1     dgp1      method1           1      3 <int [6]>    10   0.5            1
+# … with 95 more rows
 ```
 
 ---
@@ -744,12 +779,14 @@ dgp <- create_dgp(
   n = 100, p = 3
 )
 
-simChef::list_to_tibble_row(dgp$generate())
+simChef::list_to_tibble_row(
+  dgp$generate()
+)
 
 ## # A tibble: 1 × 3
-## X                 y               betas
-## <list>            <list>          <list>
-## 1 <dbl [100 × 3]> <dbl [100 × 1]> <dbl [3]>
+   X                y               betas
+   <list>           <list>          <list>
+ 1 <dbl [100 × 3]>  <dbl [100 × 1]> <dbl [3]>
 ```
 
 ---
@@ -758,15 +795,18 @@ simChef::list_to_tibble_row(dgp$generate())
 
 DGPs are the key **ingredients** of every simulation.
 
-We can quickly recreate the last example using `dgpoix` ("dee-gee-pwaa", rhymes
-with mirepoix).
+We can quickly recreate the last example using `dgpoix`.
+
+(Pronounced "dee-gee-pwaa", rhymes with "mirepoix").
 
 ```{r, eval=FALSE}
 linear_gaussian_dgp <- create_dgp(
-  dgpoix::linear_gaussian_dgp, n = 100, p_obs = 3,
-  intercept = 1, err = rnorm # params for linear_gaussian_dgp
+  dgpoix::linear_gaussian_dgp,
+  # params for linear_gaussian_dgp:
+  n = 100, p_obs = 3, intercept = 1, err = rnorm
+  # dgpoix::coef_sampler function and its params:
   betas = dgpoix::coef_sampler,
-  coefs = c(0, 0.5, 1), probs = c(0.5, 0.3, 0.2) # params for betas_sampler
+  coefs = c(0, 0.5, 1), probs = c(0.5, 0.3, 0.2)
 )
 ```
 
@@ -795,13 +835,10 @@ experiment <- create_experiment() %>%
   add_method(elnet) %>%
   add_vary_across(
     linear_gaussian_dgp,
-    p_obs = c(10, 100),
-    p_unobs = c(2, 20),
-    # varying over a vector-valued parameter
+    p_obs = c(10, 100), # observed covariates
+    p_unobs = c(2, 20), # unobserved covariates
+    # varying over a vector-valued parameter 'probs':
     probs = list(c(0.5, 0.3, 0.2), c(0.8, 0.1, 0.1))
-  ) %>%
-  add_vary_across(
-    elnet, alpha = c(0, 0.5, 1)
   )
 ```
 
@@ -809,13 +846,15 @@ experiment <- create_experiment() %>%
 
 # Run the experiment
 
-We can run the experiment in parallel by setting a `future` plan before calling
-`fit_experiment`.
+We can run the experiment in parallel by setting a
+`r emo::ji("paperclips")`[`future`](https://future.futureverse.org/) plan
+before calling `fit_experiment`.
 
 ```{r, eval=FALSE}
 future::plan(future::multicore)
 
 results <- fit_experiment(experiment, n_reps = 100)
+## Fitting experiment...
 ```
 
 ---
