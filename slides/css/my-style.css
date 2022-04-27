@@ -1,0 +1,8 @@
+.no-padding {
+	padding: 0px;
+	border: 0px;
+}
+
+.remark-inline-code {
+	background: transparent;
+}
